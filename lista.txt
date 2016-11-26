@@ -1,7 +1,0 @@
-Install:
-	 pip install PyOpenGL PyOpenGL_accelerate "PyVRML97==2.3.0a4" simpleparse numpy "OpenGLContext==2.2.0a3" pydispatcher pillow
- 	pip install PyDispatcher PyVRML97 OpenGLContext
-
-
- 	read more:
- 		- http://pyopengl.sourceforge.net/documentation/installation.html
