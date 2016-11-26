@@ -6,7 +6,8 @@ REQUIREMENTS
 ```python
 pip install numpy PyOpenGL PyOpenGL_accelerate "PyVRML97==2.3.0a4" simpleparse numpy "OpenGLContext==2.2.0a3" pydispatcher pillow
 pip install PyDispatcher PyVRML97 OpenGLContext
-pip install pil
+sudo apt-get install python-PIL
+* sudo apt-get install freeglut3-dev
 ```
 
 READ MORE:
