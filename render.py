@@ -54,6 +54,8 @@ black square.
         # For some reason the GL_PROJECTION_MATRIX is overflowing with a single push!
         # glPushMatrix()
         matrix = glGetDouble( GL_PROJECTION_MATRIX )
+
+        print (matrix)
         
         glLoadIdentity();
         glOrtho(0.0, height or 32, 0.0, width or 32, -1.0, 1.0)
