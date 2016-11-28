@@ -1,84 +1,111 @@
-from __future__ import print_function
-from OpenGLContext import testingcontext
-BaseContext = testingcontext.getInteractive()
-from OpenGL.GL import *
+from PIL import Image
+import random
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import numpy as np
 
-class TestContext( BaseContext ):
-    def loadImage( self, imageName = 'wolf.jpg' ):
-        """Load an image from a file using PIL.
-        This is closer to what you really want to do than the
-        original port's crammed-together stuff that set global
-        state in the loading method.  Note the process of binding
-        the texture to an ID then loading the texture into memory.
-        This didn't seem clear to me somehow in the tutorial.
-        """
-        try:
-            from PIL.Image import open
-        except ImportError as err:
-            from Image import open
-        im = open(imageName)
-        try:
-            ix, iy, image = im.size[0], im.size[1], im.tostring("raw", "RGBA", 0, -1)
-        except SystemError:
-            ix, iy, image = im.size[0], im.size[1], im.tostring("raw", "RGBX", 0, -1)
-        return ix,iy, image
-    def OnInit( self, ):
-        """Initialisation"""
-        print("""Should see black bitmap/square in lower left quadrant over blue background
-Should see scrawled "regular image stuff" at top of black square.
-Should see typed "Hello From Alpha-ville" in the middle of the
-black square.
+fitness = []
 
-    Note: bitmap is drawn in screen coordinates, so does not
-    respond to moving around or rescaling the window as would
-    a piece of geometry.""")
-        self.width, self.height, self.data = self.loadImage()
-        
-    def Render( self, mode = 0):
-        BaseContext.Render( self, mode )
-        
-        glClearColor(0.0,0.0,1.0,1.0)
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
-        
-        format = GL_RGBA
-        type = GL_UNSIGNED_BYTE
-        glEnable(GL_ALPHA_TEST);
-        glAlphaFunc(GL_GREATER,0);
-##		glEnable(GL_BLEND);
-##		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-        glPixelStorei(GL_PACK_ALIGNMENT, 1)
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+def main():
+	image = getPixelsList()
+	image_clone = image
+	clusters = 2
 
-        width, height = self.getViewPort()
-        glMatrixMode(GL_PROJECTION);
-        # For some reason the GL_PROJECTION_MATRIX is overflowing with a single push!
-        # glPushMatrix()
-        matrix = glGetDouble( GL_PROJECTION_MATRIX )
+	centroid_colors, centroid_array_positions = generatePopulation(image, clusters)
 
-        print (matrix)
-        
-        glLoadIdentity();
-        glOrtho(0.0, height or 32, 0.0, width or 32, -1.0, 1.0)
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
-        glRasterPos2i(40,40);
 
-        glDrawPixels(
-            self.width,
-            self.height,
-            format,
-            type,
-            self.data,
-        )
-        
-        glPopMatrix();
-        glMatrixMode(GL_PROJECTION);
-        # For some reason the GL_PROJECTION_MATRIX is overflowing with a single push!
-        # glPopMatrix();
-        glLoadMatrixd( matrix ) # should have un-decorated alias for this...
-        
-        glMatrixMode(GL_MODELVIEW);
-        
+	imgplot = plt.imshow(image)
+	plt.show()
+'''
+	image_path: may have a parameter that is the path to the file we wanna open
+	return: the return is n array lines of m pixels
+'''
+def getPixelsList(image_path=None):
+	return mpimg.imread('torre.jpg')
+	
+def getPixelRandomly(image):
+	return random.randrange(len(image)), random.randrange(len(image[1]))
+
+def generatePopulation(image, clusters):
+	population = []
+	centroids = []
+	for i in range(clusters):
+		x, y = getPixelRandomly(image)
+		centroid = image[x][y]
+		population.append(centroid)
+		centroids.append((x, y))
+
+	print "clusters_colors: ", population, "\nclusters_positions: ", centroids
+	return population, centroids
+
+# Calculates euclidean distance between a data point and all the available cluster centroids.      
+def euclidean_dist(image, centroids):
+	cluster_debut = []
+	image_classification = []
+
+	# Check if all clusters have at least one pixel associated
+	for i in centroids:
+		cluster_debut.append(False)
+
+	for pixel in image:
+		smaller_distance = (500, -1)
+
+		'''
+			Classify in clusters
+		'''
+
+        # Find which centroid is the closest to the given data point.
+		centroid_array_position = 0
+		
+		for centroid in centroids:
+			r1, g1, b1 = pixel
+			r2, g2, b2 = centroid
+
+			# code reuse
+			r = r2-r1
+			g = g2-g1
+			b = b2-b1
+
+			color_distance = sqrt(r^2+ g^2+ b^2)
+
+			if color_distance < smaller_distance[0]:
+		 		smaller_distance[0] = color_distance
+		 		smaller_distance[1] = centroid_array_position
+
+		 	centroid_array_position = centroid_array_position +1
+
+		 # Saves all the distances and the 
+		image_classification.append(smaller_distance)
+
+		if not cluster_debut[smaller_distance[1]]:
+			cluster_debut[smaller_distance[1]] = True
+
+	image_classification = numpy.reshape(image_classification, (len(image), -1))
+
+    # If any cluster is empty then assign one point from data set randomly so as to not have empty
+    # clusters and 0 means.        
+	array_position = 0
+	for debut in cluster_debut:
+		if not debut:
+			x, y = getPixelRandomly()
+			r1, g1, b1 = image[x][y]
+			r2, g2, b2 = centroids[array_position]
+			color_distance = sqrt((r2-r1)^2+(g2-g1)^2+(b2-b1)^2)
+			image_classification[x][y]
+		array_position = array_position +1
+	
+	'''
+		Calculate the fitness
+	'''
+	
+	global fitness
+	for i in range(len(image_classification)):
+		if image_classification[i][1] == 
+		
+
+
+    #return clusters
+
+
 if __name__ == "__main__":
-    TestContext.ContextMainLoop()
+	main()
