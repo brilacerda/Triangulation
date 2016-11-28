@@ -10,13 +10,14 @@ fitness = []
 
 def main():
 	image = getPixelsList()
-	img_clone  = image
+	img_clone  = []
 	clusters = 2
 
 	centroid_colors, centroid_array_positions = generatePopulation(image, clusters)
 	img_clone = fitness_n_color_distance(image, centroid_colors, len(image))
 	plotImage(img_clone)
-
+	
+	# image_clone = formatToImage(img_clone, len(image[0]), len(image))
 	for i in range(30):
 		print i + 1, " iteration"
 
@@ -80,63 +81,78 @@ def mutate(image, k, centroid_colors):
 	centroid_colors[child] = (rgb[0], rgb[1], rgb[2])
 	return centroid_colors
 
+def formatToImage(image, column, line):
+	aux = []
+	img2 = []
+	pointer = 0
+
+	for i in range(column):
+		for j in range(line):
+			aux.append(image[pointer])
+			pointer = pointer + 1
+
+		img2.append(aux)
+		aux = []
+
+	return img2
+
 # Calculates euclidean distance between a data point and all the available cluster centroids.      
 def fitness_n_color_distance(image, centroids, width):
 	global fitness
 	cluster_debut = []
 	image_classification = []
 	quantized_image = []
-	archive = open('quantized_image', 'w')
 
-	image = numpy.reshape(image, (-1, 3))
 	# Check if all clusters have at least one pixel associated
 	for i in centroids:
 		cluster_debut.append(False)
 
-	for pixel in image:
-		smaller_distance = (500, -1)
+	for height in range(len(image)):
+		aux_img_class = []
+		aux_quatiz_img = []
+		for width in range(len(image[0])):
+			smaller_distance = (500, -1)
 
-		'''
-			Classify in clusters
-		'''
+			'''
+				Classify in clusters
+			'''
+	        # Find which centroid is the closest to the given data point.
+			centroid_array_position = 0
+			
+			for centroid in centroids:
+				r1, g1, b1 = image[height][width]
+				r2, g2, b2 = centroid
 
-        # Find which centroid is the closest to the given data point.
-		centroid_array_position = 0
+				# code reuse
+				r = r2-r1
+				g = g2-g1
+				b = b2-b1
+
+				fitness = int (r)^2+ int (g)^2+ int (b)^2
+				
+				'''
+					Calculate the fitness and the color distance
+				'''
+				color_distance = sqrt(fitness)
+
+				if color_distance < smaller_distance[0]:
+			 		smaller_distance = (fitness, centroid_array_position)
+
+			 	centroid_array_position = centroid_array_position +1
+
+			if not cluster_debut[smaller_distance[1]]:
+				cluster_debut[smaller_distance[1]] = True
+
+		#The next 4 lines of code are necessary to format the proper image matrix
+
+			# Saves all the distances and the the quantized image matrix takes the color of 
+			# the centroid with the smaller distance between the pixel and the centroid
+			aux_img_class.append(smaller_distance)
+			aux_quatiz_img.append(centroids[smaller_distance[1]])
+
+		image_classification.append(aux_img_class)
+		quantized_image.append(aux_quatiz_img)
 		
-		for centroid in centroids:
-			r1, g1, b1 = pixel
-			r2, g2, b2 = centroid
-			#print r1, g1, b1, '--', r2, g2, b2
-
-			# code reuse
-			r = abs(r2-r1)
-			g = abs(g2-g1)
-			b = abs(b2-b1)
-
-			fitness = int (r)^2+ int (g)^2+ int (b)^2
-			'''
-				Calculate the fitness and the color distance
-			'''
-
-			color_distance = sqrt(fitness)
-
-			if color_distance < smaller_distance[0]:
-		 		smaller_distance= (fitness, centroid_array_position)
-
-		 	centroid_array_position = centroid_array_position +1
-
-		 # Saves all the distances and the 
-		image_classification.append(smaller_distance)
-		# the quantized image matrix takes the color of the centroid with the smaller
-		# distance between the pixel and the centroid
-		quantized_image.append(centroids[smaller_distance[1]])
-
-		if not cluster_debut[smaller_distance[1]]:
-			cluster_debut[smaller_distance[1]] = True
-
-	image_classification = numpy.reshape(image_classification, (width, -1))
-	quantized_image = numpy.reshape(quantized_image, (width, -1))
-
     # If any cluster is empty then assign one point from data set randomly so as to not have empty
     # clusters and 0 means.        
 	array_position = 0
