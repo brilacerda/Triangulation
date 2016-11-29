@@ -1,4 +1,3 @@
-from PIL import Image
 import random
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
