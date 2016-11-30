@@ -6,12 +6,13 @@ from math import sqrt, floor
 numpy.seterr(over='ignore')
 
 fitness = []
+local_fitness = []
+clusters = 3
 
 def main():
 	global fitness
 	image = getPixelsList()
 	img_clone  = []
-	clusters = 2
 
 	# Initializing the fitness
 	for i in range(clusters):
@@ -63,6 +64,8 @@ def generatePopulation(image, clusters):
 	return population, centroids
 
 def recombine(image, k, centroid_colors):
+	global local_fitness
+	global fitness
 	a, b = getPixelRandomly(image)
 	c, d = getPixelRandomly(image)
 	
@@ -71,19 +74,31 @@ def recombine(image, k, centroid_colors):
 	r2g2b2 = image[c][d]
 	r2, g2, b2 = r2g2b2
 	child = random.randrange(k)
-	centroid_colors[child] = ((r2-r1)/2, (g2-g1)/2, (b2-b1)/2)
-	return centroid_colors
+	new_centroid_colors = centroid_colors
+	new_centroid_colors[child] = ((r2+r1)%255, (g2+g1)%255, (b2+b1)%255)
+	fitness_n_color_distance(image, new_centroid_colors, len(image), partial=True)
+	if local_fitness[child] < fitness[child]:
+		local_fitness = []
+		return new_centroid_colors
+	else: 
+		local_fitness = []
+		return centroid_colors
 
 def mutate(image, k, centroid_colors):
+	global local_fitness
+	global fitness
 	x, y = getPixelRandomly(image)
-	print x, y
 	rgb = image[x][y]
-	print rgb
-
 	child = random.randrange(k)
-	print child
-	centroid_colors[child] = (rgb[0], rgb[1], rgb[2])
-	return centroid_colors
+	new_centroid_colors = centroid_colors
+	new_centroid_colors[child] = (rgb[0], rgb[1], rgb[2])
+	fitness_n_color_distance(image, new_centroid_colors, len(image), partial=True)
+	if local_fitness[child] < fitness[child]:
+		local_fitness = []
+		return new_centroid_colors
+	else: 
+		local_fitness = []
+		return centroid_colors
 
 def formatToImage(image, column, line):
 	aux = []
@@ -105,9 +120,17 @@ def calculate_fitness(fitness_data):
 
 	fitness[fitness_data[1]] = fitness[fitness_data[1]] + fitness_data[0]
 
+def calculate_partial_fitness(fitness_data):
+	global local_fitness
+	# Initializing the fitness
+	for i in range(clusters):
+		local_fitness.append(0)
+
+	local_fitness[fitness_data[1]] = local_fitness[fitness_data[1]] + fitness_data[0]
+
 
 # Calculates euclidean distance between a data point and all the available cluster centroids.      
-def fitness_n_color_distance(image, centroids, width):
+def fitness_n_color_distance(image, centroids, width, partial=False):
 	cluster_debut = []
 	image_classification = []
 	quantized_image = []
@@ -148,7 +171,10 @@ def fitness_n_color_distance(image, centroids, width):
 
 			 	centroid_array_position = centroid_array_position +1
 
-			calculate_fitness(smaller_distance)
+			if not partial:
+				calculate_fitness(smaller_distance)
+			else:
+				calculate_partial_fitness(smaller_distance)
 
 			if not cluster_debut[smaller_distance[1]]:
 				cluster_debut[smaller_distance[1]] = True
@@ -176,7 +202,6 @@ def fitness_n_color_distance(image, centroids, width):
 		array_position = array_position +1
 
 	return quantized_image
-
 
 if __name__ == "__main__":
 	main()
