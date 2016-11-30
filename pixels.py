@@ -7,7 +7,7 @@ numpy.seterr(over='ignore')
 
 fitness = []
 local_fitness = []
-clusters = 3
+clusters = 2
 
 def main():
 	global fitness
@@ -19,6 +19,7 @@ def main():
 		fitness.append(0)
 
 	centroid_colors, centroid_array_positions = generatePopulation(image, clusters)
+	centroid_colors = color_difference(centroid_colors, image)
 	img_clone = fitness_n_color_distance(image, centroid_colors, len(image))
 	plotImage(img_clone)
 	
@@ -28,12 +29,12 @@ def main():
 
 		for j in range(int (floor(clusters*0.4))+1):
 			print "# Recombination ", i
-			if random.random() <= 0.9:
+			if random.random() <= 0.7:
 				centroid_colors = recombine(img_clone, clusters, centroid_colors)
 		if random.random() <= 0.3:
 			print "# Mutation"
 			centroid_colors = mutate(img_clone, clusters, centroid_colors)
-
+		centroid_colors = color_difference(centroid_colors, image)
 		img_clone = fitness_n_color_distance(image, centroid_colors, len(image))
 		plotImage(img_clone)
 
@@ -127,6 +128,28 @@ def calculate_partial_fitness(fitness_data):
 		local_fitness.append(0)
 
 	local_fitness[fitness_data[1]] = local_fitness[fitness_data[1]] + fitness_data[0]
+
+
+def color_difference(centroids, image):
+	size = len(centroids)
+	for i in range(size):
+		for j in range(size):
+			if i < j:
+				r1, g1, b1 = centroids[i]
+				r2, g2, b2 = centroids[j]
+
+				# code reuse
+				r = r2-r1
+				g = g2-g1
+				b = b2-b1
+
+				color_distance = abs(int (r)^2+ int (g)^2+ int (b)^2)
+				color_distance = sqrt(color_distance)
+				if color_distance <= 3.5:
+					x, y = getPixelRandomly(image)
+					centroids[j] = image[x][y]	
+					color_difference(centroids, image)
+	return centroids
 
 
 # Calculates euclidean distance between a data point and all the available cluster centroids.      
